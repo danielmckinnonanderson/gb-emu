@@ -27,17 +27,47 @@
       (is (= 0x0000 (:pgm-ctr cpu))))))
 
 (deftest test-get-register
-  (testing "Get register values"
+  (testing "Register arithmetic"
     (let [cpu (gb-emu.cpu/create-cpu)]
-      (swap! cpu assoc :reg-a 0x0A)
+      (set-register cpu :reg-a 0x0A)
       (is (= 0x0A (get-register cpu :reg-a)))
-      (swap! cpu assoc :reg-b 0x0B)
+      (set-register cpu :reg-b 0x0B)
       (is (= 0x0B (get-register cpu :reg-b)))
-      (swap! cpu assoc :reg-c 0x0C)
+      (set-register cpu :reg-c 0x0C)
       (is (= 0x0C (get-register cpu :reg-c)))
-      (swap! cpu assoc :reg-d 0x0D)
+      (set-register cpu :reg-d 0x0D)
       (is (= 0x0D (get-register cpu :reg-d)))
-      (swap! cpu assoc :reg-e 0x0E)
+      (set-register cpu :reg-e 0x0E)
       (is (= 0x0E (get-register cpu :reg-e)))
-      (swap! cpu assoc :reg-f 0x0F)
+      (set-register cpu :reg-f 0x0F)
       (is (= 0x0F (get-register cpu :reg-f))))))
+
+(deftest test-opcode-to-op
+  (testing "Decode operation from op-code"
+    (is (= (name (get op-code-to-op 0x04))
+           "inc-b"))
+    (is (= (name (get op-code-to-op 0x05))
+           "dec-b"))))
+
+(deftest test-lookup-and-exec
+  (testing "Lookup and execution of instruction from op-code byte"
+    (let [cpu (gb-emu.cpu/create-cpu)]
+      ;; All registers should be initialized to zero
+
+      ;; TODO - when these opcodes have handlers
+      (lookup-and-exec cpu 0x00)
+      (lookup-and-exec cpu 0x01)
+      (lookup-and-exec cpu 0x02)
+      (lookup-and-exec cpu 0x03)
+
+      ;; FIXME
+      ;; Should be "INC B"
+      (lookup-and-exec cpu 0x04)
+      (is (= (get-register cpu :reg-b) 1))
+      
+      ;; FIXME
+      ;; Should be "DEC B"
+      (println cpu)
+      (lookup-and-exec cpu 0x05)
+      (println cpu)
+      (is (= (get-register cpu :reg-b) 0)))))
