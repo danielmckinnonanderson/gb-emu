@@ -42,32 +42,35 @@
       (set-register cpu :reg-f 0x0F)
       (is (= 0x0F (get-register cpu :reg-f))))))
 
-(deftest test-opcode-to-op
-  (testing "Decode operation from op-code"
-    (is (= (name (get op-code-to-op 0x04))
-           "inc-b"))
-    (is (= (name (get op-code-to-op 0x05))
-           "dec-b"))))
+(deftest test-set-flags
+  (testing "Set flags based on arbitrary operations"
+    (let [cpu (gb-emu.cpu/create-cpu)]
+      ;; Assert flags are initially zero
+      (is (= (get-register cpu :reg-f) 2r00000000))
+      ;; Create an arbitrary operation -- in this case,
+      )))
 
 (deftest test-lookup-and-exec
   (testing "Lookup and execution of instruction from op-code byte"
-    (let [cpu (gb-emu.cpu/create-cpu)]
-      ;; All registers should be initialized to zero
+    (testing "INC B"
+      (let [cpu (gb-emu.cpu/create-cpu)]
+        ;; Incrementing should wrap to zero
+        (set-register cpu :reg-b 0xFF)
+        (lookup-and-exec cpu 0x04)
+        (is (= (:reg-b @cpu) 0x00))
+        ;; Assert that the carry flag
 
-      ;; TODO - when these opcodes have handlers
-      (lookup-and-exec cpu 0x00)
-      (lookup-and-exec cpu 0x01)
-      (lookup-and-exec cpu 0x02)
-      (lookup-and-exec cpu 0x03)
+        ;; Incrementing again is standard addition
+        (lookup-and-exec cpu 0x04)
+        (is (= (:reg-b @cpu) 0x01))))
 
-      ;; FIXME
-      ;; Should be "INC B"
-      (lookup-and-exec cpu 0x04)
-      (is (= (get-register cpu :reg-b) 1))
-      
-      ;; FIXME
-      ;; Should be "DEC B"
-      (println cpu)
-      (lookup-and-exec cpu 0x05)
-      (println cpu)
-      (is (= (get-register cpu :reg-b) 0)))))
+    (testing "DEC B"
+        (let [cpu (gb-emu.cpu/create-cpu)]
+        ;; Decrementing should wrap to zero
+        (set-register cpu :reg-b 0x00)
+        (lookup-and-exec cpu 0x05)
+        (is (= (:reg-b @cpu) 0xFF))
+
+        ;; Decrementing again is standard subtraction
+        (lookup-and-exec cpu 0x05)
+        (is (= (:reg-b @cpu) 0xFE))))))

@@ -12,7 +12,7 @@
          :reg-c 0x00
          :reg-d 0x00
          :reg-e 0x00
-         :reg-f 0x00 ;; Flags
+         :reg-f 2r0000 ;; Flags
          :reg-h 0x00
          :reg-l 0x00
          :stack-ptr 0x0000 ;; Loc. in address-space
@@ -27,58 +27,80 @@
   [cpu, reg-key, value]
   (swap! cpu assoc reg-key value))
 
-(def byte-to-opcode-mnemonic
-  {0x00 "NOP"          ;; No-operation
-   0x01 "LD BC,d16"    ;; Load immediate value (u16) into BC
-   0x02 "LD (BC),A"    ;; Load A into memory at addr BC
-   0x03 "INC BC"       ;; Increment BC
-   0x04 "INC B"        ;; Increment B
-   0x05 "DEC B"        ;; Decrement B
-   0x06 "LD B,d8"      ;; Load immediate value (u8) into B
-   0x07 "RLCA"         ;; TODO
-   0x08 "LD (a16),SP"  ;; Load the stack pointer's value into the current address
-   0x09 "ADD HL,BC"    ;; Add BC
-   0x0A "LD A,(BC)"
-   0x0B "DEC BC"
-   0x0C "INC C"
-   0x0D "DEC C"
-   0x0E "LD C,d8"
-   0x0F "RRCA"})
-
-(defn register-xform
+(defn old-xform-reg
   "Transform a register's value by applying xform to it
-   and wrapping the value at 8-bit integer max."
+   and wrapping the value at 8-bit integer max, or when going below zero.
+   Expects `cpu` to be of type Atom<Map>.
+   Return a vector of values in shape (reg-key, old val, new val, xform)"
   [cpu reg xform]
   (swap! cpu update reg
          (fn [val] (mod (+ (xform val) 0x100) 0x100)))
   @cpu)
 
-(defn dec-b
-  [cpu]
-  (register-xform cpu :reg-b dec))
+(defn wrap-arith [val]
+  (mod (+ val 0x100) 0x100))
 
-(defn inc-b
-  [cpu]
-  (register-xform cpu :reg-b inc))
+(defn op-to-result
+  "Return a shape in the form of a vector of vectors
+   where each vector is `(register old-val new-val xform)"
+  [cpu reg xform]
+  (let [old-val (get @cpu reg)]
+    [[reg old-val (wrap-arith (xform old-val)) xform]]))
 
-(defn inc-bc
-  [cpu]
-  (register-xform cpu :reg-b inc)
-  (register-xform cpu :reg-c inc))
+(defn dec-b [cpu]
+  (old-xform-reg cpu :reg-b dec))
+
+(defn inc-b [cpu]
+  (old-xform-reg cpu :reg-b inc))
+
+(defn inc-bc [cpu]
+  (old-xform-reg cpu :reg-b inc)
+  (old-xform-reg cpu :reg-c inc))
+
+(defn dec-bc [cpu]
+  (old-xform-reg cpu :reg-b dec)
+  (old-xform-reg cpu :reg-c dec))
 
 
 (def op-code-to-op
-  {0x00 nil
-   0x01 nil
-   0x02 nil
-   0x03 nil
-   0x04 'inc-b
-   0x05 'dec-b})
+  {0x00 (fn [cpu] cpu)
+   0x01 (fn [cpu] cpu)
+   0x02 (fn [cpu] cpu)
+   0x03 inc-bc 
+   0x04 inc-b
+   0x05 dec-b
+   0x0B dec-bc})
+
+(defn op-carry?
+  "Predicate to determine if an operation caused a carry.
+   A carry occurs when:
+   - The result of an 8-bit addition is higher than 0xFF
+   - The result of a 16-bit addition is higher than 0xFFFF
+   - The result of a subtraction or comparison is lower than zero
+   - When a rotate or shift operation shifts out a 1 bit"
+  [old new]
+  ())
+
+(defn op-zeroed?
+  "Predicate to determine if an operation resulted in zero"
+  [_old new]
+  (zero? new))
+
+(defn op-half-carry?
+  "Predicate to determine if there is a carry
+   from bit 3 to bit 4 when moving from old-val to new-val.
+   Assumes that both old-val and new-val are 8-bit integers."
+  [old-val new-val]
+  (let [mask 0x0F
+        old-nibble (bit-and old-val mask)
+        new-nibble (bit-and new-val mask)]
+    (< old-nibble new-nibble)))
+
 
 (defn lookup-and-exec
   [cpu byte]
+   ;; TODO - Insert something here that updates the flags
    (let [op (get op-code-to-op byte)]
-     (if (not (nil? op))
-       (eval (op cpu))
-       nil))
-  @cpu)
+         (eval (op cpu)))
+  cpu)
+
