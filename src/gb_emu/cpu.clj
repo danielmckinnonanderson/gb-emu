@@ -81,7 +81,7 @@
 
 ;; Table of opcode bytes -> Map of functions and arguments.
 (def ops
-  {0x00 {:op nop :args [] } 0x01 nil 0x02 nil 0x03 nil 0x04 nil 0x05 nil 0x06 nil 0x07 nil
+  {0x00 {:op nop :args []} 0x01 nil 0x02 nil 0x03 nil 0x04 nil 0x05 nil 0x06 nil 0x07 nil
    0x08 nil 0x09 nil 0x0A nil 0x0B nil 0x0C nil 0x0D nil 0x0E nil 0x0F nil
 
    0x10 nil 0x11 nil 0x12 nil 0x13 nil 0x14 nil 0x15 nil 0x16 nil 0x17 nil
@@ -135,14 +135,10 @@
    0x77 nil
 
    ;; Register A
-   0x78 {:op ld-r-r' :args [:reg-a :reg-b]}
-   0x79 {:op ld-r-r' :args [:reg-a :reg-c]}
-   0x7A {:op ld-r-r' :args [:reg-a :reg-d]}
-   0x7B {:op ld-r-r' :args [:reg-a :reg-e]}
-   0x7C {:op ld-r-r' :args [:reg-a :reg-h]}
-   0x7D {:op ld-r-r' :args [:reg-a :reg-l]}
-   0x7E nil
-   0x7F {:op ld-r-r' :args [:reg-a :reg-a]}
+   0x78 {:op ld-r-r' :args [:reg-a :reg-b]} 0x79 {:op ld-r-r' :args [:reg-a :reg-c]}
+   0x7A {:op ld-r-r' :args [:reg-a :reg-d]} 0x7B {:op ld-r-r' :args [:reg-a :reg-e]}
+   0x7C {:op ld-r-r' :args [:reg-a :reg-h]} 0x7D {:op ld-r-r' :args [:reg-a :reg-l]}
+   0x7E nil                                 0x7F {:op ld-r-r' :args [:reg-a :reg-a]}
 
 
    0x80 nil 0x81 nil 0x82 nil 0x83 nil 0x84 nil 0x85 nil 0x86 nil 0x87 nil
