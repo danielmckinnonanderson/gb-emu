@@ -7,7 +7,7 @@
 |--------|-----------------|--------------|
 | 0x00   | NOP             | ✅      |
 | 0x01   | LD BC, d16      | ❌      |
-| 0x02   | LD (BC), A      | ✅      |
+| 0x02   | LD (BC), A      | ❌      |
 | 0x03   | INC BC          | ❌      |
 | 0x04   | INC B           | ❌      |
 | 0x05   | DEC B           | ❌      |
@@ -125,14 +125,14 @@
 | 0x75   | LD (HL), L      | ❌      |
 | 0x76   | HALT            | ❌      |
 | 0x77   | LD (HL), A      | ❌      |
-| 0x78   | LD A, B         | ❌      |
-| 0x79   | LD A, C         | ❌      |
-| 0x7A   | LD A, D         | ❌      |
-| 0x7B   | LD A, E         | ❌      |
-| 0x7C   | LD A, H         | ❌      |
-| 0x7D   | LD A, L         | ❌      |
+| 0x78   | LD A, B         | ✅      |
+| 0x79   | LD A, C         | ✅      |
+| 0x7A   | LD A, D         | ✅      |
+| 0x7B   | LD A, E         | ✅      |
+| 0x7C   | LD A, H         | ✅      |
+| 0x7D   | LD A, L         | ✅      |
 | 0x7E   | LD A, (HL)      | ❌      |
-| 0x7F   | LD A, A         | ❌      |
+| 0x7F   | LD A, A         | ✅      |
 | 0x80   | ADD A, B        | ❌      |
 | 0x81   | ADD A, C        | ❌      |
 | 0x82   | ADD A, D        | ❌      |

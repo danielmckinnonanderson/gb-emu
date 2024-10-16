@@ -32,12 +32,8 @@
 (defn wrap-arith [val]
   (mod (+ val 0x100) 0x100))
 
-(defn op-to-result
-  "Return a shape in the form of a vector of vectors
-   where each vector is `(register old-val new-val xform)"
-  [^Atom cpu ^Keyword reg ^IFn  xform]
-  (let [old-val (get @cpu reg)]
-    [[reg old-val (wrap-arith (xform old-val)) xform]]))
+
+;; Operation primitives
 
 (defn ld-r-r'
   "Load to the 8-bit register `r`, data from the 8-bit register `r'`."
@@ -75,359 +71,17 @@
    ld-indir-hl-r {:mnem "LD r,(HL)" :len 1 :dur 4 :flags nil}
    ld-r-indir-hl {:mnem "LD (HL),r" :len 1 :dur 4 :flags nil}})
 
-(defn op-to-info
-  [^IFn op]
-  (get op-info op))
-
 ;; 0x00
 (defn nop
   "NOP
    No operation."
-  [cpu] nil)
-
-;; 0x40
-(defn ld-b-b
-  "LD B,B
-   Functionally equivalent to NOP, but with more pizzazz.
-   See https://retrocomputing.stackexchange.com/questions/19632/what-could-be-the-reason-an-ld-b-b-instruction-was-used-in-this-busy-loop"
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-b :reg-b)
-  cpu)
-
-;; 0x41
-(defn ld-b-c
-  "LD B,C
-  Load register C into register B."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-b :reg-c)
-  cpu)
-
-;; 0x42
-(defn ld-b-d
-  "LD B,D
-  Load register D into register B."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-b :reg-d)
-  cpu)
-
-;; 0x43
-(defn ld-b-e
-  "LD B,E
-  Load register E into register B."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-b :reg-e)
-  cpu)
-
-;; 0x44
-(defn ld-b-h
-  "LD B,H
-  Load register H into register B."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-b :reg-h)
-  cpu)
-
-;; 0x45
-(defn ld-b-l
-  "LD B,L
-  Load register L into register B."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-b :reg-l)
-  cpu)
-
-;; 0x47
-(defn ld-b-a
-  "LD B,A
-  Load register A (accumulator) into register B."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-b :reg-a)
-  cpu)
-
-;; 0x48
-(defn ld-c-b
-  "LD C,B
-  Load register B into register C."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-c :reg-b)
-  cpu)
-
-;; 0x49
-(defn ld-c-c
-  "LD C,C
-   Equivalent to NOP"
   [^Atom cpu]
   cpu)
 
-;; 0x4A
-(defn ld-c-d
-  "LD C,D
-   Load register D into register C."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-c :reg-d)
-  cpu)
 
-;; 0x4B
-(defn ld-c-e
-  "LD C,E
-   Load register E into register C."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-c :reg-e)
-  cpu)
-
-;; 0x4C
-(defn ld-c-h
-  "LD C,H
-   Load register H into register C."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-c :reg-h)
-  cpu)
-
-;; 0x4E
-(defn ld-c-l
-  "LD C,L
-   Load register L into register C."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-c :reg-l)
-  cpu)
-
-;; 0x4F
-(defn ld-c-a
-  "LD C,A
-   Load register A (accumulator) into register C."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-c :reg-a)
-  cpu)
-
-;; 0x50
-(defn ld-d-b
-  "LD D,B
-  Load register B into register D."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-d :reg-b)
-  cpu)
-
-;; 0x51
-(defn ld-d-c
-  "LD D,C
-  Load register C into register D."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-d :reg-c)
-  cpu)
-
-;; 0x52
-(defn ld-d-d
-  "LD D,D
-  Load register D into register D (NOP)."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-d :reg-d)
-  cpu)
-
-;; 0x53
-(defn ld-d-e
-  "LD D,E
-  Load register E into register D."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-d :reg-e)
-  cpu)
-
-;; 0x54
-(defn ld-d-h
-  "LD D,H
-  Load register H into register D."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-d :reg-h)
-  cpu)
-
-;; 0x55
-(defn ld-d-l
-  "LD D,L
-  Load register L into register D."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-d :reg-l)
-  cpu)
-
-;; 0x56
-(defn ld-d-a
-  "LD D,A
-  Load register A into register D."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-h :reg-a)
-  cpu)
-
-;; 0x58
-(defn ld-e-b
-  "LD E,B
-  Load register B into register E."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-e :reg-b)
-  cpu)
-
-;; 0x59
-(defn ld-e-c
-  "LD E,C
-  Load register C into register E."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-e :reg-c)
-  cpu)
-
-;; 0x5A
-(defn ld-e-d
-  "LD E,D
-  Load register D into register E."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-e :reg-d)
-  cpu)
-
-;; 0x5B
-(defn ld-e-e
-  "LD E,E
-  Load register E into register E (NOP)."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-e :reg-e)
-  cpu)
-
-;; 0x5C
-(defn ld-e-h
-  "LD E,H
-  Load register H into register E."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-e :reg-h)
-  cpu)
-
-;; 0x5D
-(defn ld-e-l
-  "LD E,L
-  Load register L into register E."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-e :reg-l)
-  cpu)
-
-;; 0x5F
-(defn ld-e-a
-  "LD E,A
-   Load register A (accumulator) into register E."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-e :reg-a)
-  cpu)
-
-;; 0x60
-(defn ld-h-b
-  "LD H,B
-  Load register B into register H."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-h :reg-b)
-  cpu)
-
-;; 0x61
-(defn ld-h-c
-  "LD H,C
-  Load register C into register H."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-h :reg-c)
-  cpu)
-
-;; 0x62
-(defn ld-h-d
-  "LD H,D
-  Load register D into register H."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-h :reg-d)
-  cpu)
-
-;; 0x63
-(defn ld-h-e
-  "LD H,E
-  Load register E into register H."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-h :reg-e)
-  cpu)
-
-;; 0x64
-(defn ld-h-h
-  "LD H,H
-  Load register H into register H (NOP)."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-h :reg-h)
-  cpu)
-
-;; 0x65
-(defn ld-h-l
-  "LD H,L
-  Load register L into register H."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-h :reg-l)
-  cpu)
-
-;; 0x66
-(defn ld-h-a
-  "LD H,A
-   Load register A (accumulator) into register H."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-h :reg-a)
-  cpu)
-
-;; 0x68
-(defn ld-l-b
-  "LD L,B
-  Load register B into register L."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-l :reg-b)
-  cpu)
-
-;; 0x69
-(defn ld-l-c
-  "LD L,C
-  Load register C into register L."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-l :reg-c)
-  cpu)
-
-;; 0x6A
-(defn ld-l-d
-  "LD L,D
-  Load register D into register L."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-l :reg-d)
-  cpu)
-
-;; 0x6B
-(defn ld-l-e
-  "LD L,E
-  Load register E into register L."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-l :reg-e)
-  cpu)
-
-;; 0x6C
-(defn ld-l-h
-  "LD L,H
-  Load register H into register L."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-l :reg-h)
-  cpu)
-
-;; 0x6D
-(defn ld-l-l
-  "LD L,L
-  Load register L into register L (NOP)."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-l :reg-l)
-  cpu)
-
-;; 0x6F
-(defn ld-l-a
-  "LD L,A
-  Load register A into register H."
-  [^Atom cpu]
-  (ld-r-r' cpu :reg-h :reg-a)
-  cpu)
-
-
-;; TODO - Come back to this eventually. I have barely started this and I
-;;        already see some obvious design flaws with encapsulating the
-;;        op primitive (like ld-r-r') with these named variants,
-;;        namely, it kind of renders my 'op-info' table moot.
+;; Table of opcode bytes -> Map of functions and arguments.
 (def ops
-  {0x00 nop 0x01 nil 0x02 nil 0x03 nil 0x04 nil 0x05 nil 0x06 nil 0x07 nil
+  {0x00 {:op nop :args [] } 0x01 nil 0x02 nil 0x03 nil 0x04 nil 0x05 nil 0x06 nil 0x07 nil
    0x08 nil 0x09 nil 0x0A nil 0x0B nil 0x0C nil 0x0D nil 0x0E nil 0x0F nil
 
    0x10 nil 0x11 nil 0x12 nil 0x13 nil 0x14 nil 0x15 nil 0x16 nil 0x17 nil
@@ -439,18 +93,57 @@
    0x30 nil 0x31 nil 0x32 nil 0x33 nil 0x34 nil 0x35 nil 0x36 nil 0x37 nil
    0x38 nil 0x39 nil 0x3A nil 0x3B nil 0x3C nil 0x3D nil 0x3E nil 0x3F nil
 
-   ;; 8-bit register loads
-   0x40 ld-b-b 0x41 ld-b-c 0x42 ld-b-d 0x43 ld-b-e 0x44 ld-b-h 0x45 ld-b-l 0x46 nil 0x47 ld-b-a
-   0x48 ld-c-b 0x49 ld-c-c 0x4A ld-c-d 0x4B ld-c-e 0x4C ld-c-h 0x4D ld-c-l 0x4E nil 0x4F ld-c-a
+    ;; 8-bit register loads
+    ;; Register B
+   0x40 {:op ld-r-r' :args [:reg-b :reg-b]} 0x41 {:op ld-r-r' :args [:reg-b :reg-c]}
+   0x42 {:op ld-r-r' :args [:reg-b :reg-d]} 0x43 {:op ld-r-r' :args [:reg-b :reg-e]}
+   0x44 {:op ld-r-r' :args [:reg-b :reg-h]} 0x45 {:op ld-r-r' :args [:reg-b :reg-l]}
+   0x46 nil                                 0x47 {:op ld-r-r' :args [:reg-b :reg-a]}
+   ;; Register C
+   0x48 {:op ld-r-r' :args [:reg-c :reg-b]} 0x49 {:op ld-r-r' :args [:reg-c :reg-c]}
+   0x4A {:op ld-r-r' :args [:reg-c :reg-d]} 0x4B {:op ld-r-r' :args [:reg-c :reg-e]}
+   0x4C {:op ld-r-r' :args [:reg-c :reg-h]} 0x4D {:op ld-r-r' :args [:reg-c :reg-l]}
+   0x4E nil                                 0x4F {:op ld-r-r' :args [:reg-c :reg-a]}
+   ;; Register D
+   0x50 {:op ld-r-r' :args [:reg-d :reg-b]} 0x51 {:op ld-r-r' :args [:reg-d :reg-c]}
+   0x52 {:op ld-r-r' :args [:reg-d :reg-d]} 0x53 {:op ld-r-r' :args [:reg-d :reg-e]}
+   0x54 {:op ld-r-r' :args [:reg-d :reg-h]} 0x55 {:op ld-r-r' :args [:reg-d :reg-l]}
+   0x56 nil                                 0x57 {:op ld-r-r' :args [:reg-d :reg-a]}
+   ;; Register E
+   0x58 {:op ld-r-r' :args [:reg-e :reg-b]} 0x59 {:op ld-r-r' :args [:reg-e :reg-c]}
+   0x5A {:op ld-r-r' :args [:reg-e :reg-d]} 0x5B {:op ld-r-r' :args [:reg-e :reg-e]}
+   0x5C {:op ld-r-r' :args [:reg-e :reg-h]} 0x5D {:op ld-r-r' :args [:reg-e :reg-l]}
+   0x5E nil                                 0x5F {:op ld-r-r' :args [:reg-e :reg-a]}
+   ;; Register H
+   0x60 {:op ld-r-r' :args [:reg-h :reg-b]} 0x61 {:op ld-r-r' :args [:reg-h :reg-c]}
+   0x62 {:op ld-r-r' :args [:reg-h :reg-d]} 0x63 {:op ld-r-r' :args [:reg-h :reg-e]}
+   0x64 {:op ld-r-r' :args [:reg-h :reg-h]} 0x65 {:op ld-r-r' :args [:reg-h :reg-l]}
+   0x66 nil                                 0x67 {:op ld-r-r' :args [:reg-h :reg-a]}
+   ;; Register L
+   0x68 {:op ld-r-r' :args [:reg-l :reg-b]} 0x69 {:op ld-r-r' :args [:reg-l :reg-c]}
+   0x6A {:op ld-r-r' :args [:reg-l :reg-d]} 0x6B {:op ld-r-r' :args [:reg-l :reg-e]}
+   0x6C {:op ld-r-r' :args [:reg-l :reg-h]} 0x6D {:op ld-r-r' :args [:reg-l :reg-l]}
+   0x6E nil                                 0x6F {:op ld-r-r' :args [:reg-l :reg-a]}
 
-   0x50 ld-d-b 0x51 ld-d-c 0x52 ld-d-d 0x53 ld-d-e 0x54 ld-d-h 0x55 ld-d-l 0x56 nil 0x57 ld-d-a
-   0x58 ld-e-b 0x59 ld-e-c 0x5A ld-e-d 0x5B ld-e-e 0x5C ld-e-h 0x5D ld-e-l 0x5E nil 0x5F ld-e-a
+   0x70 nil
+   0x71 nil
+   0x72 nil
+   0x73 nil
+   0x74 nil
+   0x75 nil
+   0x76 nil
+   0x77 nil
 
-   0x60 ld-h-b 0x61 ld-h-c 0x62 ld-h-d 0x63 ld-h-e 0x64 ld-h-h 0x65 ld-h-l 0x66 nil 0x67 ld-h-a
-   0x68 ld-l-b 0x69 ld-l-c 0x6A ld-l-d 0x6B ld-l-e 0x6C ld-l-h 0x6D ld-l-l 0x6E nil 0x6F ld-l-a
+   ;; Register A
+   0x78 {:op ld-r-r' :args [:reg-a :reg-b]}
+   0x79 {:op ld-r-r' :args [:reg-a :reg-c]}
+   0x7A {:op ld-r-r' :args [:reg-a :reg-d]}
+   0x7B {:op ld-r-r' :args [:reg-a :reg-e]}
+   0x7C {:op ld-r-r' :args [:reg-a :reg-h]}
+   0x7D {:op ld-r-r' :args [:reg-a :reg-l]}
+   0x7E nil
+   0x7F {:op ld-r-r' :args [:reg-a :reg-a]}
 
-   0x70 nil 0x71 nil 0x72 nil 0x73 nil 0x74 nil 0x75 nil 0x76 nil 0x77 nil
-   0x78 nil 0x79 nil 0x7A nil 0x7B nil 0x7C nil 0x7D nil 0x7E nil 0x7F nil
 
    0x80 nil 0x81 nil 0x82 nil 0x83 nil 0x84 nil 0x85 nil 0x86 nil 0x87 nil
    0x88 nil 0x89 nil 0x8A nil 0x8B nil 0x8C nil 0x8D nil 0x8E nil 0x8F nil
@@ -480,6 +173,9 @@
   [cpu byte]
    ;; TODO - Insert something here that updates the flags
   (let [op (get ops byte)]
-    (eval (op cpu)))
+    (if (nil? op)
+      (let [ins (op-info )]
+        (throw (RuntimeException. (format "Unimplemented instruction %s", ins))))
+      (eval (op cpu))))
   cpu)
 
