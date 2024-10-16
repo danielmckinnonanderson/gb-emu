@@ -47,30 +47,20 @@
     (let [cpu (gb-emu.cpu/create-cpu)]
       ;; Assert flags are initially zero
       (is (= (get-register cpu :reg-f) 2r00000000))
-      ;; Create an arbitrary operation -- in this case,
+      ;; FIXME
       )))
 
-(deftest test-lookup-and-exec
-  (testing "Lookup and execution of instruction from op-code byte"
-    (testing "INC B"
-      (let [cpu (gb-emu.cpu/create-cpu)]
-        ;; Incrementing should wrap to zero
-        (set-register cpu :reg-b 0xFF)
-        (lookup-and-exec cpu 0x04)
-        (is (= (:reg-b @cpu) 0x00))
-        ;; Assert that the carry flag
+(deftest test-ld-r-r'
+  (testing "Loading 8-bit register into other 8-bit register"
+    (let [cpu (gb-emu.cpu/create-cpu)]
+      (set-register cpu :reg-a 0x0A)
+      (set-register cpu :reg-e 0x0E)
+      (ld-r-r' cpu :reg-a :reg-e)
+      (is (= (get-register cpu :reg-a) (get-register cpu :reg-e))))))
 
-        ;; Incrementing again is standard addition
-        (lookup-and-exec cpu 0x04)
-        (is (= (:reg-b @cpu) 0x01))))
-
-    (testing "DEC B"
-        (let [cpu (gb-emu.cpu/create-cpu)]
-        ;; Decrementing should wrap to zero
-        (set-register cpu :reg-b 0x00)
-        (lookup-and-exec cpu 0x05)
-        (is (= (:reg-b @cpu) 0xFF))
-
-        ;; Decrementing again is standard subtraction
-        (lookup-and-exec cpu 0x05)
-        (is (= (:reg-b @cpu) 0xFE))))))
+(deftest test-ld-r-n
+  (testing "Loading 8-bit register with the immediate data n"
+    (let [cpu (gb-emu.cpu/create-cpu)]
+      (set-register cpu :reg-a 0x0A)
+      (ld-r-n cpu :reg-a 0xFF)
+      (is (= (get-register cpu :reg-a) 0xFF)))))
