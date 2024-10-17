@@ -47,29 +47,26 @@
   (set-register cpu r n)
   cpu)
 
-(defn ld-indir-hl-r
-  "Load to the 8-bit register `r`, data from the absolute address
-   specified by the 16-bit register `HL`."
+(defn ld-r-<hl>
+  "Load to the 8-bit register `r`,
+   data form the absolute address specified by the 16-bit register `HL`."
+  []
+  ())
+
+(defn ld-<hl>-r
+  "Load to the absolute address specified by the 16-bit register `HL`,
+   data from the 8-bit register `r`."
   [^Atom cpu ^Keyword r]
   ;; TODO - Implementation should load the value stored at absolute address
   ;;        in the current 'hl' register, and 
   ())
 
-(defn ld-r-indir-hl
-  "Load to the absolute address specified by the 16-bit register `hl`,
-   data from the 8-bit register `r`."
+(defn ld-<hl>-n
+  "Load to the absolute address specified by the 16-bit register `HL`,
+   the immediate data `n`."
   [^Atom cpu ^Keyword r]
   ())
 
-(def op-info
-  "Table from operations to their supplemental info --
-   :len is the length in bytes (including opcode byte),
-   :dur is the duration in T-states,
-   :flags is the flags the instruction affects, if any"
-  {ld-r-r'       {:mnem "LD r,r'"   :len 1 :dur 4 :flags nil}
-   ld-r-n        {:mnem "LD r,n"    :len 2 :dur 8 :flags nil}
-   ld-indir-hl-r {:mnem "LD r,(HL)" :len 1 :dur 4 :flags nil}
-   ld-r-indir-hl {:mnem "LD (HL),r" :len 1 :dur 4 :flags nil}})
 
 ;; 0x00
 (defn nop
@@ -79,9 +76,12 @@
   cpu)
 
 
-;; Table of opcode bytes -> Map of functions and arguments.
 (def ops
-  {0x00 {:op nop :args []} 0x01 nil 0x02 nil 0x03 nil 0x04 nil 0x05 nil 0x06 nil 0x07 nil
+  "Table from opcode bytes -> map of operation data (including its
+   invocation function)"
+
+  {0x00 {:op nop :args [] :mnem "NOP" :len 1 :dur 4 :flags nil}
+   0x01 nil 0x02 nil 0x03 nil 0x04 nil 0x05 nil 0x06 nil 0x07 nil
    0x08 nil 0x09 nil 0x0A nil 0x0B nil 0x0C nil 0x0D nil 0x0E nil 0x0F nil
 
    0x10 nil 0x11 nil 0x12 nil 0x13 nil 0x14 nil 0x15 nil 0x16 nil 0x17 nil
@@ -95,50 +95,77 @@
 
     ;; 8-bit register loads
     ;; Register B
-   0x40 {:op ld-r-r' :args [:reg-b :reg-b]} 0x41 {:op ld-r-r' :args [:reg-b :reg-c]}
-   0x42 {:op ld-r-r' :args [:reg-b :reg-d]} 0x43 {:op ld-r-r' :args [:reg-b :reg-e]}
-   0x44 {:op ld-r-r' :args [:reg-b :reg-h]} 0x45 {:op ld-r-r' :args [:reg-b :reg-l]}
-   0x46 nil                                 0x47 {:op ld-r-r' :args [:reg-b :reg-a]}
+   0x40 {:op ld-r-r' :args [:reg-b :reg-b] :mnem "LD B,B"    :len 1 :dur 4 :flags nil}
+   0x41 {:op ld-r-r' :args [:reg-b :reg-c] :mnem "LD B,C"    :len 1 :dur 4 :flags nil}
+   0x42 {:op ld-r-r' :args [:reg-b :reg-d] :mnem "LD B,D"    :len 1 :dur 4 :flags nil}
+   0x43 {:op ld-r-r' :args [:reg-b :reg-e] :mnem "LD B,E"    :len 1 :dur 4 :flags nil}
+   0x44 {:op ld-r-r' :args [:reg-b :reg-h] :mnem "LD B,H"    :len 1 :dur 4 :flags nil}
+   0x45 {:op ld-r-r' :args [:reg-b :reg-l] :mnem "LD B,L"    :len 1 :dur 4 :flags nil}
+   0x46 {:op :unimpl :args []              :mnem "LD B,[HL]" :len 1 :dur 8 :flags nil}
+   0x47 {:op ld-r-r' :args [:reg-b :reg-a] :mnem "LD B,A"    :len 1 :dur 4 :flags nil}
    ;; Register C
-   0x48 {:op ld-r-r' :args [:reg-c :reg-b]} 0x49 {:op ld-r-r' :args [:reg-c :reg-c]}
-   0x4A {:op ld-r-r' :args [:reg-c :reg-d]} 0x4B {:op ld-r-r' :args [:reg-c :reg-e]}
-   0x4C {:op ld-r-r' :args [:reg-c :reg-h]} 0x4D {:op ld-r-r' :args [:reg-c :reg-l]}
-   0x4E nil                                 0x4F {:op ld-r-r' :args [:reg-c :reg-a]}
+   0x48 {:op ld-r-r' :args [:reg-c :reg-b] :mnem "LD C,B"    :len 1 :dur 4 :flags nil}
+   0x49 {:op ld-r-r' :args [:reg-c :reg-c] :mnem "LD C,C"    :len 1 :dur 4 :flags nil}
+   0x4A {:op ld-r-r' :args [:reg-c :reg-d] :mnem "LD C,D"    :len 1 :dur 4 :flags nil}
+   0x4B {:op ld-r-r' :args [:reg-c :reg-e] :mnem "LD C,E"    :len 1 :dur 4 :flags nil}
+   0x4C {:op ld-r-r' :args [:reg-c :reg-h] :mnem "LD C,H"    :len 1 :dur 4 :flags nil}
+   0x4D {:op ld-r-r' :args [:reg-c :reg-l] :mnem "LD C,L"    :len 1 :dur 4 :flags nil}
+   0x4E {:op :unimpl :args []              :mnem "LD B,[HL]" :len 1 :dur 8 :flags nil}
+   0x4F {:op ld-r-r' :args [:reg-c :reg-a] :mnem "LD C,A"    :len 1 :dur 4 :flags nil}
    ;; Register D
-   0x50 {:op ld-r-r' :args [:reg-d :reg-b]} 0x51 {:op ld-r-r' :args [:reg-d :reg-c]}
-   0x52 {:op ld-r-r' :args [:reg-d :reg-d]} 0x53 {:op ld-r-r' :args [:reg-d :reg-e]}
-   0x54 {:op ld-r-r' :args [:reg-d :reg-h]} 0x55 {:op ld-r-r' :args [:reg-d :reg-l]}
-   0x56 nil                                 0x57 {:op ld-r-r' :args [:reg-d :reg-a]}
+   0x50 {:op ld-r-r' :args [:reg-d :reg-b] :mnem "LD D,B"    :len 1 :dur 4 :flags nil}
+   0x51 {:op ld-r-r' :args [:reg-d :reg-c] :mnem "LD D,C"    :len 1 :dur 4 :flags nil}
+   0x52 {:op ld-r-r' :args [:reg-d :reg-d] :mnem "LD D,D"    :len 1 :dur 4 :flags nil}
+   0x53 {:op ld-r-r' :args [:reg-d :reg-e] :mnem "LD D,E"    :len 1 :dur 4 :flags nil}
+   0x54 {:op ld-r-r' :args [:reg-d :reg-h] :mnem "LD D,H"    :len 1 :dur 4 :flags nil}
+   0x55 {:op ld-r-r' :args [:reg-d :reg-l] :mnem "LD D,L"    :len 1 :dur 4 :flags nil}
+   0x56 {:op :unimpl :args []              :mnem "LD D,[HL]" :len 1 :dur 4 :flags nil}
+   0x57 {:op ld-r-r' :args [:reg-d :reg-a] :mnem "LD D,A"    :len 1 :dur 4 :flags nil}
    ;; Register E
-   0x58 {:op ld-r-r' :args [:reg-e :reg-b]} 0x59 {:op ld-r-r' :args [:reg-e :reg-c]}
-   0x5A {:op ld-r-r' :args [:reg-e :reg-d]} 0x5B {:op ld-r-r' :args [:reg-e :reg-e]}
-   0x5C {:op ld-r-r' :args [:reg-e :reg-h]} 0x5D {:op ld-r-r' :args [:reg-e :reg-l]}
-   0x5E nil                                 0x5F {:op ld-r-r' :args [:reg-e :reg-a]}
+   0x58 {:op ld-r-r' :args [:reg-e :reg-b] :mnem "LD E,B"    :len 1 :dur 4 :flags nil}
+   0x59 {:op ld-r-r' :args [:reg-e :reg-c] :mnem "LD E,C"    :len 1 :dur 4 :flags nil}
+   0x5A {:op ld-r-r' :args [:reg-e :reg-d] :mnem "LD E,D"    :len 1 :dur 4 :flags nil}
+   0x5B {:op ld-r-r' :args [:reg-e :reg-e] :mnem "LD E,E"    :len 1 :dur 4 :flags nil}
+   0x5C {:op ld-r-r' :args [:reg-e :reg-h] :mnem "LD E,H"    :len 1 :dur 4 :flags nil}
+   0x5D {:op ld-r-r' :args [:reg-e :reg-l] :mnem "LD E,L"    :len 1 :dur 4 :flags nil}
+   0x5E {:op :unimpl :args []              :mnem "LD E,[HL]" :len 1 :dur 4 :flags nil}
+   0x5F {:op ld-r-r' :args [:reg-e :reg-a] :mnem "LD E,A"    :len 1 :dur 4 :flags nil}
    ;; Register H
-   0x60 {:op ld-r-r' :args [:reg-h :reg-b]} 0x61 {:op ld-r-r' :args [:reg-h :reg-c]}
-   0x62 {:op ld-r-r' :args [:reg-h :reg-d]} 0x63 {:op ld-r-r' :args [:reg-h :reg-e]}
-   0x64 {:op ld-r-r' :args [:reg-h :reg-h]} 0x65 {:op ld-r-r' :args [:reg-h :reg-l]}
-   0x66 nil                                 0x67 {:op ld-r-r' :args [:reg-h :reg-a]}
+   0x60 {:op ld-r-r' :args [:reg-h :reg-b] :mnem "LD H,B"    :len 1 :dur 4 :flags nil}
+   0x61 {:op ld-r-r' :args [:reg-h :reg-c] :mnem "LD H,C"    :len 1 :dur 4 :flags nil}
+   0x62 {:op ld-r-r' :args [:reg-h :reg-d] :mnem "LD H,D"    :len 1 :dur 4 :flags nil}
+   0x63 {:op ld-r-r' :args [:reg-h :reg-e] :mnem "LD H,E"    :len 1 :dur 4 :flags nil}
+   0x64 {:op ld-r-r' :args [:reg-h :reg-h] :mnem "LD H,H"    :len 1 :dur 4 :flags nil}
+   0x65 {:op ld-r-r' :args [:reg-h :reg-l] :mnem "LD H,L"    :len 1 :dur 4 :flags nil}
+   0x66 {:op :unimpl :args []              :mnem "LD H,[HL]" :len 1 :dur 4 :flags nil}
+   0x67 {:op ld-r-r' :args [:reg-h :reg-a] :mnem "LD H,A"    :len 1 :dur 4 :flags nil}
    ;; Register L
-   0x68 {:op ld-r-r' :args [:reg-l :reg-b]} 0x69 {:op ld-r-r' :args [:reg-l :reg-c]}
-   0x6A {:op ld-r-r' :args [:reg-l :reg-d]} 0x6B {:op ld-r-r' :args [:reg-l :reg-e]}
-   0x6C {:op ld-r-r' :args [:reg-l :reg-h]} 0x6D {:op ld-r-r' :args [:reg-l :reg-l]}
-   0x6E nil                                 0x6F {:op ld-r-r' :args [:reg-l :reg-a]}
-
-   0x70 nil
-   0x71 nil
-   0x72 nil
-   0x73 nil
-   0x74 nil
-   0x75 nil
-   0x76 nil
-   0x77 nil
-
+   0x68 {:op ld-r-r' :args [:reg-l :reg-b] :mnem "LD L,B"    :len 1 :dur 4 :flags nil}
+   0x69 {:op ld-r-r' :args [:reg-l :reg-c] :mnem "LD L,C"    :len 1 :dur 4 :flags nil}
+   0x6A {:op ld-r-r' :args [:reg-l :reg-d] :mnem "LD L,D"    :len 1 :dur 4 :flags nil}
+   0x6B {:op ld-r-r' :args [:reg-l :reg-e] :mnem "LD L,E"    :len 1 :dur 4 :flags nil}
+   0x6C {:op ld-r-r' :args [:reg-l :reg-h] :mnem "LD L,H"    :len 1 :dur 4 :flags nil}
+   0x6D {:op ld-r-r' :args [:reg-l :reg-l] :mnem "LD L,L"    :len 1 :dur 4 :flags nil}
+   0x6E {:op :unimpl :args []              :mnem "LD L,[HL]" :len 1 :dur 4 :flags nil}
+   0x6F {:op ld-r-r' :args [:reg-l :reg-a] :mnem "LD L,A"    :len 1 :dur 4 :flags nil}
+   ;; Indirected-HL
+   0x70 {:op :unimpl :args []              :mnem "LD [HL],B" :len 1 :dur 8 :flags nil}
+   0x71 {:op :unimpl :args []              :mnem "LD [HL],C" :len 1 :dur 8 :flags nil}
+   0x72 {:op :unimpl :args []              :mnem "LD [HL],D" :len 1 :dur 8 :flags nil}
+   0x73 {:op :unimpl :args []              :mnem "LD [HL],E" :len 1 :dur 8 :flags nil}
+   0x74 {:op :unimpl :args []              :mnem "LD [HL],H" :len 1 :dur 8 :flags nil}
+   0x75 {:op :unimpl :args []              :mnem "LD [HL],L" :len 1 :dur 8 :flags nil}
+   0x76 {:op :unimpl :args []              :mnem "HALT"      :len 1 :dur 8 :flags nil}
+   0x77 {:op :unimpl :args []              :mnem "LD [HL],A" :len 1 :dur 8 :flags nil}
    ;; Register A
-   0x78 {:op ld-r-r' :args [:reg-a :reg-b]} 0x79 {:op ld-r-r' :args [:reg-a :reg-c]}
-   0x7A {:op ld-r-r' :args [:reg-a :reg-d]} 0x7B {:op ld-r-r' :args [:reg-a :reg-e]}
-   0x7C {:op ld-r-r' :args [:reg-a :reg-h]} 0x7D {:op ld-r-r' :args [:reg-a :reg-l]}
-   0x7E nil                                 0x7F {:op ld-r-r' :args [:reg-a :reg-a]}
+   0x78 {:op ld-r-r' :args [:reg-a :reg-b] :mnem "LD A,"     :len 1 :dur 4 :flags nil}
+   0x79 {:op ld-r-r' :args [:reg-a :reg-c] :mnem "LD A,"     :len 1 :dur 4 :flags nil}
+   0x7A {:op ld-r-r' :args [:reg-a :reg-d] :mnem "LD A,"     :len 1 :dur 4 :flags nil}
+   0x7B {:op ld-r-r' :args [:reg-a :reg-e] :mnem "LD A,"     :len 1 :dur 4 :flags nil}
+   0x7C {:op ld-r-r' :args [:reg-a :reg-h] :mnem "LD A,"     :len 1 :dur 4 :flags nil}
+   0x7D {:op ld-r-r' :args [:reg-a :reg-l] :mnem "LD A,"     :len 1 :dur 4 :flags nil}
+   0x7E {:op nil     :args []              :mnem "LD A,"     :len 1 :dur 4 :flags nil}
+   0x7F {:op ld-r-r' :args [:reg-a :reg-a] :mnem "LD A,"     :len 1 :dur 4 :flags nil}
 
 
    0x80 nil 0x81 nil 0x82 nil 0x83 nil 0x84 nil 0x85 nil 0x86 nil 0x87 nil
@@ -164,14 +191,3 @@
 
    0xF0 nil 0xF1 nil 0xF2 nil 0xF3 nil 0xF4 nil 0xF5 nil 0xF6 nil 0xF7 nil
    0xF8 nil 0xF9 nil 0xFA nil 0xFB nil 0xFC nil 0xFD nil 0xFE nil 0xFF nil})
-
-(defn lookup-and-exec
-  [cpu byte]
-   ;; TODO - Insert something here that updates the flags
-  (let [op (get ops byte)]
-    (if (nil? op)
-      (let [ins (op-info )]
-        (throw (RuntimeException. (format "Unimplemented instruction %s", ins))))
-      (eval (op cpu))))
-  cpu)
-
