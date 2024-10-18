@@ -57,12 +57,67 @@
 (defn load-file-as-bytes
   "Given a filepath, return a vector of bytes reprsenting
    the content of the file."
-  [file-path]
+  [^String file-path]
   (with-open [input-stream (java.io.FileInputStream. file-path)]
     (let [file-size (.available input-stream)
           bytes (byte-array file-size)]
       (.read input-stream bytes)
       bytes)))
+
+
+(defn cartridge-type
+  "Given the ROM bytes, read byte 0x143 to determine the
+   cartridge type and return it as a symbol."
+  [^PersistentVector rom-bytes]
+  (let [t (get rom-bytes 0x143)]
+    (cond
+      (= t 0x00) :rom-only
+      (= t 0x01) :mbc1
+      (= t 0x02) :mbc1+ram
+      (= t 0x03) :mbc1+ram+bat
+      (= t 0x05) :mbc2
+      (= t 0x06) :mbc2+bat
+      (= t 0x08) :rom+ram
+      (= t 0x09) :rom+ram+bat
+      (= t 0x0B) :mmm01
+      (= t 0x0C) :mmm01+ram
+      (= t 0x0D) :mmm01+ram+bat
+      (= t 0x0F) :mbc3+tim+bat
+      (= t 0x10) :mbc3+tim+ram+bat
+      (= t 0x11) :mbc3
+      (= t 0x12) :mbc3+ram
+      (= t 0x13) :mbc3+ram+bat
+      (= t 0x15) :mbc4
+      (= t 0x16) :mbc4+ram
+      (= t 0x17) :mbc4+ram+bat
+      (= t 0x19) :mbc5
+      (= t 0x1A) :mbc5+ram
+      (= t 0x1B) :mbc5+ram+bat
+      (= t 0x1C) :mbc5+rum
+      (= t 0x1D) :mbc5+rum+ram
+      (= t 0x1E) :mbc5+rum+ram+bat
+      (= t 0xFC) :pocket-cam
+      (= t 0xFD) :bandai-tama5
+      (= t 0xFE) :huc3
+      (= t 0xFF) :huc1+ram+bat
+      :else :unknown)))
+
+(defn cartridge-size
+  "Read the ROM size byte at address 0x148
+   to determine the ROM bank number"
+  [^PersistentVector rom-bytes]
+  (let [b (get rom-bytes 0x148)]
+    (cond
+      (= b 0x00)   2
+      (= b 0x01)   4
+      (= b 0x02)   8
+      (= b 0x03)  16
+      (= b 0x04)  32
+      (= b 0x05)  64
+      (= b 0x06) 128
+      (= b 0x52)  72
+      (= b 0x53)  80
+      (= b 0x54)  96)))
 
 (defn cartridge-name
   "Given a vec of bytes representing the ROM data,
@@ -80,8 +135,10 @@
             (apply str))))
 
 (defn load-rom
-  [file-path]
+  [^String file-path]
   (try
-    (load-file-as-bytes file-path)
+    (let [rom (vec (load-file-as-bytes file-path))]
+      (println (format "ROM has %d bytes" (count rom)))
+      rom)
     (catch Exception e
       (println "Could not load ROM file:" (.getMessage e)))))
