@@ -70,7 +70,7 @@
    The cartridge name is encoded as ASCII characters stored
    in the bytes from 0x134 - 0x143 inclusive.
    If the cartridge name is shorter than the allotted space,
-   the remaining bytes are filled with `NUL` (\u0000).
+   the remaining bytes are filled with `NUL` (`\\u0000`).
    These `NUL` characters will be removed by this function."
   [^PersistentVector rom-bytes]
   (let [char-bytes (subvec rom-bytes 0x134 0x143)]

@@ -96,18 +96,77 @@
    Possible values within the vecotr include :calc for calculated based on the result
    of the instruction, 0 for reset, 1 for set."
 
-  {0x00 {:op nop :args [] :mnem "NOP" :len 1 :dur 4 :flags []}
-   0x01 nil 0x02 nil 0x03 nil 0x04 nil 0x05 nil 0x06 nil 0x07 nil
-   0x08 nil 0x09 nil 0x0A nil 0x0B nil 0x0C nil 0x0D nil 0x0E nil 0x0F nil
+  {0x00 {:op nop     :args [] :mnem "NOP"         :len 1 :dur  4 :flags nil}
+   0x01 {:op :unimpl :args [] :mnem "LD BC,n16"   :len 3 :dur 12 :flags nil}
+   0x02 {:op :unimpl :args [] :mnem "LD [BC],A"   :len 1 :dur  8 :flags nil}
+   0x03 {:op :unimpl :args [] :mnem "INC BC"      :len 1 :dur  8 :flags nil}
+   0x04 {:op :unimpl :args [] :mnem "INC B"       :len 1 :dur  4 :flags [:calc 0 :calc nil]}
+   0x05 {:op :unimpl :args [] :mnem "DEC B"       :len 1 :dur  4 :flags [:calc 1 :calc nil]}
+   0x06 {:op :unimpl :args [] :mnem "LD B,n8"     :len 2 :dur  8 :flags nil}
+   0x07 {:op :unimpl :args [] :mnem "RLCA"        :len 1 :dur  4 :flags [0 0 0 :calc]}
 
-   0x10 nil 0x11 nil 0x12 nil 0x13 nil 0x14 nil 0x15 nil 0x16 nil 0x17 nil
-   0x18 nil 0x19 nil 0x1A nil 0x1B nil 0x1C nil 0x1D nil 0x1E nil 0x1F nil
+   0x08 {:op :unimpl :args [] :mnem "LD [a16],SP" :len 3 :dur 20 :flags nil}
+   0x09 {:op :unimpl :args [] :mnem "ADD HL,BC"   :len 1 :dur  8 :flags [nil 0 :calc :calc]}
+   0x0A {:op :unimpl :args [] :mnem "LD A,[BC]"   :len 1 :dur  8 :flags nil}
+   0x0B {:op :unimpl :args [] :mnem "DEC BC"      :len 1 :dur  8 :flags nil}
+   0x0C {:op :unimpl :args [] :mnem "INC C"       :len 1 :dur  4 :flags [:calc 0 :calc nil]}
+   0x0D {:op :unimpl :args [] :mnem "DEC C"       :len 1 :dur  4 :flags [:calc 1 :calc nil]}
+   0x0E {:op :unimpl :args [] :mnem "LD C,n8"     :len 2 :dur  8 :flags nil}
+   0x0F {:op :unimpl :args [] :mnem "RRCA"        :len 1 :dur  4 :flags [0 0 0 :calc]}
 
-   0x20 nil 0x21 nil 0x22 nil 0x23 nil 0x24 nil 0x25 nil 0x26 nil 0x27 nil
-   0x28 nil 0x29 nil 0x2A nil 0x2B nil 0x2C nil 0x2D nil 0x2E nil 0x2F nil
+   0x10 {:op :unimpl :args [] :mnem "STOP n8"     :len 2 :dur  4 :flags nil}
+   0x11 {:op :unimpl :args [] :mnem "LD DE,n16"   :len 3 :dur 12 :flags nil}
+   0x12 {:op :unimpl :args [] :mnem "LD [DE],A"   :len 1 :dur  8 :flags nil}
+   0x13 {:op :unimpl :args [] :mnem "INC DE"      :len 1 :dur  8 :flags nil}
+   0x14 {:op :unimpl :args [] :mnem "INC D"       :len 1 :dur  4 :flags [:calc 0 :calc nil]}
+   0x15 {:op :unimpl :args [] :mnem "DEC D"       :len 1 :dur  4 :flags [:calc 1 :calc nil]}
+   0x16 {:op :unimpl :args [] :mnem "LD D,n8"     :len 2 :dur  8 :flags nil}
+   0x17 {:op :unimpl :args [] :mnem "RLA"         :len 1 :dur  4 :flags [0 0 0 :calc]}
 
-   0x30 nil 0x31 nil 0x32 nil 0x33 nil 0x34 nil 0x35 nil 0x36 nil 0x37 nil
-   0x38 nil 0x39 nil 0x3A nil 0x3B nil 0x3C nil 0x3D nil 0x3E nil 0x3F nil
+   0x18 {:op :unimpl :args [] :mnem "JR e8"       :len 2 :dur 12 :flags nil}
+   0x19 {:op :unimpl :args [] :mnem "ADD HL,DE"   :len 1 :dur  8 :flags [nil 0 :calc :calc]}
+   0x1A {:op :unimpl :args [] :mnem "LD A,[DE]"   :len 1 :dur  8 :flags nil}
+   0x1B {:op :unimpl :args [] :mnem "DEC DE"      :len 1 :dur  8 :flags nil}
+   0x1C {:op :unimpl :args [] :mnem "INC E"       :len 1 :dur  4 :flags [:calc 0 :calc nil]}
+   0x1D {:op :unimpl :args [] :mnem "DEC E"       :len 1 :dur  4 :flags [:calc 1 :calc nil]}
+   0x1E {:op :unimpl :args [] :mnem "LD E,n8"     :len 2 :dur  8 :flags nil}
+   0x1F {:op :unimpl :args [] :mnem "RRA"         :len 1 :dur  4 :flags [0 0 0 :calc]}
+
+   0x20 {:op :unimpl :args [] :mnem "JR NZ,e8"    :len 2 :dur [12 8] :flags nil}
+   0x21 {:op :unimpl :args [] :mnem "LD HL,n16"   :len 3 :dur 12 :flags nil}
+   0x22 {:op :unimpl :args [] :mnem "LD [HL+],A"  :len 1 :dur  8 :flags nil}
+   0x23 {:op :unimpl :args [] :mnem "INC HL"      :len 1 :dur  8 :flags nil}
+   0x24 {:op :unimpl :args [] :mnem "INC H"       :len 1 :dur  4 :flags [:calc 0 :calc nil]}
+   0x25 {:op :unimpl :args [] :mnem "DEC H"       :len 1 :dur  4 :flags [:calc 1 :calc nil]}
+   0x26 {:op :unimpl :args [] :mnem "LD H,n8"     :len 2 :dur  8 :flags nil}
+   0x27 {:op :unimpl :args [] :mnem "DAA"         :len 1 :dur  4 :flags [:calc nil 0 :calc]}
+
+   0x28 {:op :unimpl :args [] :mnem "JR Z,e8"     :len 2 :dur [12 8] :flags nil}
+   0x29 {:op :unimpl :args [] :mnem "ADD HL,HL"   :len 1 :dur  8 :flags [nil 0 :calc :calc]}
+   0x2A {:op :unimpl :args [] :mnem "LD A,[HL+]"  :len 1 :dur  8 :flags nil}
+   0x2B {:op :unimpl :args [] :mnem "DEC HL"      :len 1 :dur  8 :flags nil}
+   0x2C {:op :unimpl :args [] :mnem "INC L"       :len 1 :dur  4 :flags [:calc 0 :calc nil]}
+   0x2D {:op :unimpl :args [] :mnem "DEC L"       :len 1 :dur  4 :flags [:calc 1 :calc nil]}
+   0x2E {:op :unimpl :args [] :mnem "LD L,n8"     :len 2 :dur  8 :flags nil}
+   0x2F {:op :unimpl :args [] :mnem "CPL"         :len 1 :dur  4 :flags [nil 1 1 nil]}
+
+   0x30 {:op :unimpl :args [] :mnem "JR NC,e8"    :len 2 :dur [12 8] :flags nil}
+   0x31 {:op :unimpl :args [] :mnem "LD SP,n16"   :len 3 :dur 12 :flags nil}
+   0x32 {:op :unimpl :args [] :mnem "LD [HL-],A"  :len 1 :dur  8 :flags nil}
+   0x33 {:op :unimpl :args [] :mnem "INC SP"      :len 1 :dur  8 :flags nil}
+   0x34 {:op :unimpl :args [] :mnem "INC [HL]"    :len 1 :dur 12 :flags [:calc 0 :calc nil]}
+   0x35 {:op :unimpl :args [] :mnem "DEC [HL]"    :len 1 :dur 12 :flags [:calc 1 :calc nil]}
+   0x36 {:op :unimpl :args [] :mnem "LD [HL],n8"  :len 2 :dur 12 :flags nil}
+   0x37 {:op :unimpl :args [] :mnem "SCF"         :len 1 :dur  4 :flags [nil 0 0 1]}
+
+   0x38 {:op :unimpl :args [] :mnem "JR C,e8"     :len 2 :dur [12 8] :flags nil}
+   0x39 {:op :unimpl :args [] :mnem "ADD HL,SP"   :len 1 :dur  8 :flags [nil 0 :calc :calc]}
+   0x3A {:op :unimpl :args [] :mnem "LD A,[HL-]"  :len 1 :dur  8 :flags nil}
+   0x3B {:op :unimpl :args [] :mnem "DEC SP"      :len 1 :dur  8 :flags nil}
+   0x3C {:op :unimpl :args [] :mnem "INC A"       :len 1 :dur  4 :flags [:calc 0 :calc nil]}
+   0x3D {:op :unimpl :args [] :mnem "DEC A"       :len 1 :dur  4 :flags [:calc 1 :calc nil]}
+   0x3E {:op :unimpl :args [] :mnem "LD A,n8"     :len 2 :dur  8 :flags nil}
+   0x3F {:op :unimpl :args [] :mnem "CCF"         :len 1 :dur  4 :flags [nil 0 0 :calc]}
 
    ;; --------------------
    ;; 8-bit register loads
