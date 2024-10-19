@@ -10,31 +10,41 @@
   []
   (atom {:reg-a 0x00
          :reg-b 0x00
-         :reg-c 0x00
+         :reg-c 0x13
          :reg-d 0x00
-         :reg-e 0x00
+         :reg-e 0xD8
          :reg-f 2r00000000 ;; Flags
-         :reg-h 0x00
-         :reg-l 0x00
-         :stack-ptr 0x0000 ;; Loc. in address-space
-         :pgm-ctr 0x0000}))
+         :reg-h 0x01
+         :reg-l 0x4D
+         :stack-ptr 0xFFFE ;; Loc. in address-space
+         :pgm-ctr 0x0100}))
 
 (defn get-register
   "Get the value of the supplied register."
   [cpu, reg-key]
   (get @cpu reg-key))
 
+(defn get-register-pair
+  "Get the value of the supplied 8-bit registers as
+   as single 16-bit value."
+  [cpu, reg-key1 reg-key2]
+  (bit-or (bit-shift-left (get-register cpu reg-key1) 0x08)
+          (get-register cpu reg-key2)))
+
 (defn set-register
   [^Atom cpu, ^Keyword reg-key, ^Integer value]
   (swap! cpu assoc reg-key value)
   cpu)
 
-(defn wrap-arith [val]
-  (mod (+ val 0x100) 0x100))
+(defn wrap-arith [val max]
+  (mod (+ val max) max))
 
+(defn inc-pgm-ctr
+  [^Atom cpu]
+  (set-register cpu :pgm-ctr
+                (wrap-arith (+ 1 (get-register cpu :pgm-ctr)) 0xFFFF)))
 
 ;; Operation primitives
-
 (defn ld-r-r'
   "Load to the 8-bit register `r`, data from the 8-bit register `r'`."
   [^Atom cpu ^Keyword r ^Keyword r']
@@ -257,7 +267,7 @@
    0x83 {:op :unimpl :args [:reg-a :reg-e] :mnem "ADD A,E"    :len 1 :dur 4 :flags [:calc 0     :calc :calc]}
    0x84 {:op :unimpl :args [:reg-a :reg-h] :mnem "ADD A,H"    :len 1 :dur 4 :flags [:calc 0     :calc :calc]}
    0x85 {:op :unimpl :args [:reg-a :reg-l] :mnem "ADD A,L"    :len 1 :dur 4 :flags [:calc 0     :calc :calc]}
-   0x86 {:op :unimpl :args [:reg-a] :mnem "ADD A,[HL]" :len 1 :dur 4 :flags [:calc 0     :calc :calc]}
+   0x86 {:op :unimpl :args [:reg-a       ] :mnem "ADD A,[HL]" :len 1 :dur 4 :flags [:calc 0     :calc :calc]}
    0x87 {:op :unimpl :args [:reg-a :reg-a] :mnem "ADD A,A"    :len 1 :dur 4 :flags [:calc 0     :calc :calc]}
 
    0x88 {:op :unimpl :args [:reg-a :reg-b] :mnem "ADC A,B"    :len 1 :dur 4 :flags [:calc 0     :calc :calc]}

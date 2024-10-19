@@ -17,16 +17,16 @@
       (is (contains? cpu :pgm-ctr))
       (is (= 0x00 (:reg-a cpu)))
       (is (= 0x00 (:reg-b cpu)))
-      (is (= 0x00 (:reg-c cpu)))
+      (is (= 0x13 (:reg-c cpu)))
       (is (= 0x00 (:reg-d cpu)))
-      (is (= 0x00 (:reg-e cpu)))
-      (is (= 0x00 (:reg-f cpu)))
-      (is (= 0x00 (:reg-h cpu)))
-      (is (= 0x00 (:reg-l cpu)))
-      (is (= 0x0000 (:stack-ptr cpu)))
-      (is (= 0x0000 (:pgm-ctr cpu))))))
+      (is (= 0xD8 (:reg-e cpu)))
+      (is (= 2r00000000 (:reg-f cpu)))
+      (is (= 0x01 (:reg-h cpu)))
+      (is (= 0x4D (:reg-l cpu)))
+      (is (= 0xFFFE (:stack-ptr cpu)))
+      (is (= 0x0100 (:pgm-ctr cpu))))))
 
-(deftest test-get-register
+(deftest test-get-set-register
   (testing "Register arithmetic"
     (let [cpu (gb-emu.cpu/create-cpu)]
       (set-register cpu :reg-a 0x0A)
@@ -41,14 +41,6 @@
       (is (= 0x0E (get-register cpu :reg-e)))
       (set-register cpu :reg-f 0x0F)
       (is (= 0x0F (get-register cpu :reg-f))))))
-
-(deftest test-set-flags
-  (testing "Set flags based on arbitrary operations"
-    (let [cpu (gb-emu.cpu/create-cpu)]
-      ;; Assert flags are initially zero
-      (is (= (get-register cpu :reg-f) 2r00000000))
-      ;; FIXME
-      )))
 
 (deftest test-ld-r-r'
   (testing "Loading 8-bit register into other 8-bit register"

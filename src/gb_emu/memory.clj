@@ -1,5 +1,5 @@
 (ns gb-emu.memory
-  (:import [clojure.lang PersistentVector]))
+  (:import [clojure.lang Keyword PersistentVector]))
 
 (def rom0-start 0x0000)
 (def rom0-end 0x3FFF)
@@ -30,7 +30,7 @@
    to the memory structure that can be used to access it."
   [addr]
   (cond
-    (and (>= addr rom0-start)  (<= addr rom0-end))   :rom-0
+    (and (>= addr rom0-start)  (<= addr rom0-end))   :cartridge
     (and (>= addr rom1-start)  (<= addr rom1-end))   :rom-1
     (and (>= addr vram-start)  (<= addr vram-end))   :vram
     (and (>= addr ex-ram-start)(<= addr ex-ram-end)) :ex-ram
@@ -45,10 +45,10 @@
     :else :unknown))
 
 
-(defn create-memory
+(defn create-memory-map
   "Create a map to each region of memory."
   []
-  (atom {:rom  nil
+  (atom {:cartridge nil
          :vram nil
          :echo nil
          :hram nil
@@ -102,6 +102,21 @@
       (= t 0xFF) :huc1+ram+bat
       :else :unknown)))
 
+
+(defn cartridge-bat?
+  [^Keyword type]
+  (or (= type :mbc1+ram+bat)
+      (= type :rom+ram+bat)
+      (= type :mmm01+ram+bat)
+      (= type :mbc3+tim+bat)
+      (= type :mbc3+tim+ram+bat)
+      (= type :mbc3+ram+bat)
+      (= type :mbc4+ram+bat)
+      (= type :mbc5+ram+bat)
+      (= type :mbc5+rum+ram+bat)
+      (= type :huc1+ram+bat)))
+
+
 (defn cartridge-size
   "Read the ROM size byte at address 0x148
    to determine the ROM bank number"
@@ -134,11 +149,27 @@
             (filter #(not= % \u0000))
             (apply str))))
 
-(defn load-rom
+(defn cartridge-sgb?
+  [^PersistentVector rom-bytes]
+  (= 3 (get rom-bytes 0x146)))
+
+(defn cartridge-japanese?
+  "Read byte 0x14A. If the byte is `0`, the cartridge
+   is Japanese."
+  [^PersistentVector rom-bytes]
+  (= 0 (get rom-bytes 0x14A)))
+
+(defn load-cartridge
   [^String file-path]
   (try
     (let [rom (vec (load-file-as-bytes file-path))]
       (println (format "ROM has %d bytes" (count rom)))
-      rom)
+      {:name      (cartridge-name rom)
+       :size      (cartridge-size rom)
+       :type      (cartridge-type rom)
+       :battery?  (cartridge-bat? (cartridge-type rom))
+       :sgb?      (cartridge-sgb? rom)
+       :japanese? (cartridge-japanese? rom)
+       :bytes     rom})
     (catch Exception e
       (println "Could not load ROM file:" (.getMessage e)))))
