@@ -1,36 +1,52 @@
 (ns gb-emu.memory
-  (:import [clojure.lang Keyword PersistentVector]))
+  (:import [clojure.lang
+            Atom
+            Keyword
+            PersistentHashMap
+            PersistentVector]))
 
 (def rom0-start 0x0000)
-(def rom0-end 0x3FFF)
+(def rom0-end   0x3FFF)
+
 (def rom1-start 0x4000)
-(def rom1-end 0x7FFF)
+(def rom1-end   0x7FFF)
+
 (def vram-start 0x8000)
-(def vram-end 0x9FFF)
+(def vram-end   0x9FFF)
+
 (def ex-ram-start 0xA000)
-(def ex-ram-end 0xBFFF)
+(def ex-ram-end   0xBFFF)
+
 (def wram1-start 0xC000)
-(def wram1-end 0xCFFF)
+(def wram1-end   0xCFFF)
+
 (def wram2-start 0xD000)
-(def wram2-end 0xDFFF)
+(def wram2-end   0xDFFF)
+
 (def echo-start 0xE000)
-(def echo-end 0xFDFF)
+(def echo-end   0xFDFF)
+
 (def oam-start 0xFE00)
-(def oam-end 0xFE9F)
+(def oam-end   0xFE9F)
+
 (def prohib-start 0xFEA0)
-(def prohib-end 0xFEFF)
+(def prohib-end   0xFEFF)
+
 (def io-start 0xFF00)
-(def io-end 0xFF7F)
+(def io-end   0xFF7F)
+
 (def hram-start 0xFF80)
-(def hram-end 0xFFFE)
+(def hram-end   0xFFFE)
+
 (def ie-address 0xFFFF)
+
 
 (defn addr-to-mem-key
   "Given an address of physical memory, return a key
    to the memory structure that can be used to access it."
   [addr]
   (cond
-    (and (>= addr rom0-start)  (<= addr rom0-end))   :cartridge
+    (and (>= addr rom0-start)  (<= addr rom0-end))   :rom-0
     (and (>= addr rom1-start)  (<= addr rom1-end))   :rom-1
     (and (>= addr vram-start)  (<= addr vram-end))   :vram
     (and (>= addr ex-ram-start)(<= addr ex-ram-end)) :ex-ram
@@ -44,15 +60,28 @@
     (= addr ie-address)                              :ie
     :else :unknown))
 
+(defn region-size
+  "Utility function for determining the size of a memory region
+   based on its start and end addresses."
+  [start end]
+  (+ 1 (- end start)))
 
 (defn create-memory-map
   "Create a map to each region of memory."
   []
-  (atom {:cartridge nil
-         :vram nil
-         :echo nil
-         :hram nil
-         :wram nil}))
+  (atom {:rom-0      (vec (repeat (region-size rom0-start rom0-end) 0))
+         :rom-1      (vec (repeat (region-size rom1-start rom1-end) 0))
+         :vram       (vec (repeat (region-size vram-start vram-end) 0))
+         :ex-ram     (vec (repeat (region-size ex-ram-start ex-ram-end) 0))
+         :wram-1     (vec (repeat (region-size wram1-start wram1-end) 0))
+         :wram-2     (vec (repeat (region-size wram2-start wram2-end) 0))
+         :echo       (vec (repeat (region-size echo-start echo-end) 0))
+         :oam        (vec (repeat (region-size oam-start oam-end) 0))
+         :prohibited (vec (repeat (region-size prohib-start prohib-end) 0))
+         :io         (vec (repeat (region-size io-start io-end) 0))
+         :hram       (vec (repeat (region-size hram-start hram-end) 0))
+         :ie         (vec (repeat 1 0))}))
+
 
 (defn load-file-as-bytes
   "Given a filepath, return a vector of bytes reprsenting
@@ -163,7 +192,7 @@
   [^String file-path]
   (try
     (let [rom (vec (load-file-as-bytes file-path))]
-      (println (format "ROM has %d bytes" (count rom)))
+      (println (format "ROM has %d bytes" (.length rom)))
       {:name      (cartridge-name rom)
        :size      (cartridge-size rom)
        :type      (cartridge-type rom)
@@ -173,3 +202,25 @@
        :bytes     rom})
     (catch Exception e
       (println "Could not load ROM file:" (.getMessage e)))))
+
+(defn mmap-cartridge
+  "Given the loaded cartridge, memory-map the data
+   into the address bus."
+  [^PersistentVector rom-bytes
+   ^Atom memory]
+  (let [rom-len (.length rom-bytes)
+        rom0-len (region-size rom0-start rom0-end)
+        rom1-len (region-size rom1-start rom1-end)
+        rom0-data (subvec rom-bytes 0x0 (min rom-len rom0-len))
+        rom1-data (if (> rom-len rom0-len)
+                      (subvec rom-bytes rom0-len (min rom-len (+ rom0-len rom1-len)))
+                      (vec (repeat rom1-len 0x0)))]
+    (swap! memory assoc :rom-0 rom0-data)
+    (swap! memory assoc :rom-1 rom1-data)))
+
+(defn memory-fetch
+  "Fetch the byte at the supplied address."
+  [^PersistentHashMap memory
+   ^Integer addr]
+  (let [memkey (addr-to-mem-key addr)]
+    ()))
