@@ -190,6 +190,7 @@
 
 (defn load-cartridge
   [^String file-path]
+  (println (format "Loading ROM from file \"%s\"..." file-path))
   (try
     (let [rom (vec (load-file-as-bytes file-path))]
       (println (format "ROM has %d bytes" (.length rom)))
@@ -203,6 +204,10 @@
     (catch Exception e
       (println "Could not load ROM file:" (.getMessage e)))))
 
+;; NOTE - Checked address 0x40, the value is 0xC3 = -61. The value of
+;;        address 0x41 is 36 = 0x24.
+;;        This indicates that the byte order is flipped (little endian)
+;;        from what my hexdump file shows. This will likely require code chgs.
 (defn mmap-cartridge
   "Given the loaded cartridge, memory-map the data
    into the address bus."
@@ -220,7 +225,7 @@
 
 (defn memory-fetch
   "Fetch the byte at the supplied address."
-  [^PersistentHashMap memory
+  [^Atom memory
    ^Integer addr]
   (let [memkey (addr-to-mem-key addr)]
     ()))

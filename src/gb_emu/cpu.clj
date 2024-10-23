@@ -1,6 +1,9 @@
 (ns gb-emu.cpu
   (:import [clojure.lang Atom Keyword IFn]))
 
+;; CPU clock speed is 4.194304MHz
+(def CLOCK-SPEED 4194304)
+
 (defn create-cpu
   "Create a new CPU with all 8-bit registers set to 0.
    A CPU has registers A, B, C, D, E, F, H, and L.

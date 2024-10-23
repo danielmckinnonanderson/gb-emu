@@ -4,8 +4,6 @@
   (:require [gb-emu.memory :as memory :refer :all]) 
   (:import [clojure.lang PersistentHashMap]))
 
-;; CPU clock speed is 4.194304MHz
-(def CLOCK-SPEED 4194304)
 
 (def emulator
   {:cpu    (cpu/create-cpu)
